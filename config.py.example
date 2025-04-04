@@ -1,0 +1,8 @@
+from datetime import timedelta
+SETTINGS = {
+    'DEBUG': True,
+    'SECRET_KEY': 'key',
+    'SQLALCHEMY_DATABASE_URI': 'sqlite:///users.db',
+    'PERMANENT_SESSION_LIFETIME': timedelta(minutes=n)
+}
+
