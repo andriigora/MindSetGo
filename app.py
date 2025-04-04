@@ -17,7 +17,9 @@ class User(db.Model):
 
     def __repr__(self):
         return f"<User {self.username}>"
-
+@app.route('/')
+def index():
+    return redirect(url_for('login'))
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
