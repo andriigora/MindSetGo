@@ -1,0 +1,131 @@
+/*----------------The file style.css IS AI generated----------------*/
+* {
+    box-sizing: border-box;
+}
+/*---------------- Global Styles ----------------*/
+body {
+    font-family: Arial, sans-serif;
+    margin: 2em;
+    background-color: #f2f7f9;
+    color: #333;
+}
+
+h1, h2, h3 {
+    text-align: center;
+    color: #444;
+}
+
+/*---------------- Form Styles ----------------*/
+form {
+    max-width: 300px;
+    margin: auto;
+    padding: 15px;
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+label {
+    font-weight: bold;
+}
+
+form input[type="text"],
+form input[type="email"],
+form input[type="password"] {
+    width: 100%;
+    padding: 8px 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+form input[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease-in-out;
+}
+
+form input[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+/*---------------- Buttons ----------------*/
+.btn {
+    display: inline-block;
+    padding: 8px 16px;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    text-align: center;
+    transition: opacity 0.3s ease;
+}
+
+.btn-logout {
+    background-color: #f44336;
+}
+
+.btn-logout:hover {
+    opacity: 0.8;
+}
+
+/*---------------- Messages and Alerts ----------------*/
+.message {
+    margin: 1em auto;
+    padding: 1em;
+    max-width: 300px;
+    border-radius: 4px;
+    text-align: center;
+    background-color: #e9f6ff;
+    border: 1px solid #88caff;
+}
+
+.message.error {
+    background-color: #ffecec;
+    border-color: #ff5c5c;
+}
+
+.message.success {
+    background-color: #ecffec;
+    border-color: #8bcf8b;
+}
+
+/*---------------- Dashboard Specific Styles ----------------*/
+.user-info {
+    max-width: 350px;
+    margin: 15px auto;
+    padding: 15px;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.user-info ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.user-info li {
+    padding: 5px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #efefef;
+}
+
+.user-info strong {
+    color: #4CAF50;
+}
+
+/*---------------- Links ----------------*/
+a {
+    color: #4CAF50;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
