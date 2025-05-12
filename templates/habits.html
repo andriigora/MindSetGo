@@ -1,0 +1,131 @@
+<!-- AI co-edit -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Habits</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="messages">
+          {% for category, message in messages %}
+            <div class="message {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <h1>Your Habits</h1>
+    <p><a class="btn" href="{{ url_for('dashboard') }}">← Back to Dashboard</a></p>
+
+    <!-- Add New Habit -->
+    <div class="card" style="margin-bottom:2rem;">
+      <form method="POST" action="{{ url_for('habits') }}">
+        <h2>Add New Habit</h2>
+        <label>Name:
+          <input type="text" name="name" required>
+        </label>
+        <label>Frequency:
+          <select name="frequency">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+          </select>
+        </label>
+        <label>Goal (times per period):
+          <input type="number" name="goal" min="1" required>
+        </label>
+        <button type="submit" class="btn">Create Habit</button>
+      </form>
+    </div>
+
+    <h2>Manage Habits</h2>
+    <ul class="habit-list">
+      {% for habit in habits %}
+        <li class="habit-card">
+          <div class="habit-header">
+            <span class="habit-title">{{ habit.name }}</span>
+            <span class="habit-meta">({{ habit.frequency }}, goal: {{ habit.goal }})</span>
+          </div>
+
+          <!-- Progress Input -->
+          <div class="progress-form">
+            <form method="POST" action="{{ url_for('complete_habit', habit_id=habit.id) }}">
+              <label>
+                {% if habit.frequency == 'daily' %}
+                  Today:
+                  <input type="number"
+                         name="count"
+                         min="0"
+                         value="{{ progress_today.get(habit.id, 0) }}">
+                {% else %}
+                  This week:
+                  <input type="number"
+                         name="count"
+                         min="0"
+                         value="{{ weekly_progress.get(habit.id, 0) }}">
+                {% endif %}
+              </label>
+              <button type="submit" class="btn btn-secondary">
+                {% if habit.id in done_today %}Update{% else %}Save{% endif %}
+              </button>
+            </form>
+          </div>
+
+          <!-- Progress Display -->
+          {% if habit.frequency == 'weekly' %}
+            <p class="habit-meta">
+              Since {{ week_start }}: {{ weekly_progress[habit.id] }} / {{ habit.goal }}
+              {% if weekly_progress[habit.id] > habit.goal %}
+                <span class="overdone">(+{{ weekly_progress[habit.id] - habit.goal }})</span>
+              {% endif %}
+            </p>
+          {% else %}
+            <p class="habit-meta">
+              Today: {{ progress_today.get(habit.id, 0) }} / {{ habit.goal }}
+            </p>
+          {% endif %}
+
+          <!-- Edit Habit -->
+          <div class="details">
+            <details>
+              <summary>Edit</summary>
+              <form method="POST"
+                    action="{{ url_for('edit_habit', habit_id=habit.id) }}">
+                <label>Name:
+                  <input type="text" name="name" value="{{ habit.name }}">
+                </label>
+                <label>Frequency:
+                  <select name="frequency">
+                    <option value="daily" {% if habit.frequency=='daily' %}selected{% endif %}>Daily</option>
+                    <option value="weekly" {% if habit.frequency=='weekly' %}selected{% endif %}>Weekly</option>
+                  </select>
+                </label>
+                <label>Goal:
+                  <input type="number" name="goal" value="{{ habit.goal }}" min="1">
+                </label>
+                <button type="submit" class="btn">Save</button>
+              </form>
+            </details>
+          </div>
+
+          <!-- Delete Habit -->
+          <div class="delete-form">
+            <form method="POST"
+                  action="{{ url_for('delete_habit', habit_id=habit.id) }}"
+                  onsubmit="return confirm('Delete this habit?');">
+              <button type="submit" class="btn btn-logout">Delete</button>
+            </form>
+          </div>
+        </li>
+      {% else %}
+        <li>No habits yet. Add one above!</li>
+      {% endfor %}
+    </ul>
+  </div>
+</body>
+</

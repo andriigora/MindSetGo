@@ -2,12 +2,15 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from config import SETTINGS
+from flask_migrate import Migrate
+from datetime import date, timedelta
+from sqlalchemy import func
 
-
-app = Flask(__name__)
+app = Flask(__name__, instance_relative_config=True)
 app.config.update(SETTINGS)
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
+migrate = Migrate(app, db)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)  # Unique user id
@@ -34,7 +37,7 @@ def register():
             db.session.commit()
             flash('Account created successfully. Please log in.', 'success')
             return redirect(url_for('login'))
-        except Exception as e:
+        except Exception:
             # In case of error (like duplicate username/email), roll back the session.
             db.session.rollback()
             flash('Error: Username or email may already exist.', 'danger')
@@ -138,6 +141,129 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
+
+class Habit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    name = db.Column(db.String(120), nullable=False)
+    frequency = db.Column(db.String(50), nullable=False)   # 'daily' or 'weekly'
+    goal = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.Date, nullable=False, default=date.today)
+
+    progresses = db.relationship('Progress', backref='habit', cascade='all, delete-orphan')
+
+    def __repr__(self):
+        return f"<Habit {self.name}>"
+
+class Progress(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    habit_id = db.Column(db.Integer, db.ForeignKey('habit.id'), nullable=False)
+    date = db.Column(db.Date, nullable=False, default=date.today)
+    count = db.Column(db.Integer, nullable=False, default=0)
+
+    __table_args__ = (
+        db.UniqueConstraint('habit_id', 'date', name='unique_daily_progress'),
+     ) # for any given habit and date there can be at most one row
+
+    def __repr__(self):
+        return f"<Progress Habit:{self.habit_id} on {self.date} = {self.count}>"
+
+def require_login():
+    if 'user_id' not in session:
+        flash('Please log in.', 'warning')
+        return redirect(url_for('login'))
+
+@app.route('/habits', methods=['GET', 'POST'])
+def habits():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    user = User.query.get(session['user_id'])
+
+    if request.method == 'POST':
+        return redirect(url_for('habits'))
+
+    habits = Habit.query.filter_by(user_id=user.id).all()
+    today = date.today()
+
+    p_today = Progress.query.filter_by(date=today).all()
+    done_today = {p.habit_id for p in p_today}
+    progress_today = {p.habit_id: p.count for p in p_today}
+
+    week_start = today - timedelta(days=today.weekday())
+    weekly_progress = {}
+    for h in habits:
+        if h.frequency == 'weekly':
+            total = db.session.query(
+                func.coalesce(func.sum(Progress.count), 0)
+            ).filter(
+                Progress.habit_id == h.id,
+                Progress.date >= week_start,
+                Progress.date <= today
+            ).scalar()
+            weekly_progress[h.id] = total or 0
+        else:
+            weekly_progress[h.id] = progress_today.get(h.id, 0)
+
+    return render_template(
+        'habits.html',
+        habits=habits,
+        done_today=done_today,
+        progress_today=progress_today,
+        weekly_progress=weekly_progress,
+        week_start=week_start
+    )
+
+@app.route('/habits/<int:habit_id>/edit', methods=['POST'])
+def edit_habit(habit_id):
+    habit = Habit.query.get_or_404(habit_id)
+    if habit.user_id != session.get('user_id'):
+        flash('Not authorized.', 'danger')
+        return redirect(url_for('habits'))
+
+    habit.name = request.form['name']
+    habit.frequency = request.form['frequency']
+    habit.goal = int(request.form['goal'])
+    db.session.commit()
+    flash('Habit updated.', 'success')
+    return redirect(url_for('habits'))
+
+@app.route('/habits/<int:habit_id>/delete', methods=['POST'])
+def delete_habit(habit_id):
+    habit = Habit.query.get_or_404(habit_id)
+    if habit.user_id != session.get('user_id'):
+        flash('Not authorized.', 'danger')
+        return redirect(url_for('habits'))
+    db.session.delete(habit)
+    db.session.commit()
+    flash('Habit deleted.', 'info')
+    return redirect(url_for('habits'))
+
+@app.route('/habits/<int:habit_id>/complete', methods=['POST'])
+def complete_habit(habit_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    habit = Habit.query.get_or_404(habit_id)
+    if habit.user_id != session.get('user_id'):
+        flash('How did you get here?!', 'danger')
+        return redirect(url_for('habits'))
+    today = date.today()
+    try:
+        count = int(request.form.get('count', 0))
+    except ValueError:
+        flash('Write number.', 'warning')
+        return redirect(url_for('habits'))
+
+    progress = Progress.query.filter_by(habit_id=habit_id, date=today).first()
+    if not progress:
+        progress = Progress(habit_id=habit_id, date=today, count=count)
+        db.session.add(progress)
+    else:
+        progress.count = count
+
+    db.session.commit()
+    flash(f"Save: «{habit.name}» – {count} from {habit.goal}", 'success')
+    return redirect(url_for('habits'))
 
 if __name__ == '__main__':
     db.create_all()

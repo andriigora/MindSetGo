@@ -1,131 +1,263 @@
-/*----------------The file style.css IS AI generated----------------*/
-* {
-    box-sizing: border-box;
+/* ==============================================
+
+    !AI!
+   Root Variables & Base Reset
+   ============================================== */
+:root {
+  --color-bg: #f5f7fa;
+  --color-surface: #ffffff;
+  --color-primary: #5a67d8;
+  --color-primary-hover: #434190;
+  --color-secondary: #48bb78;
+  --color-secondary-hover: #2f855a;
+  --color-text: #2d3748;
+  --color-muted: #718096;
+  --color-error: #e53e3e;
+  --radius: 0.5rem;
+  --shadow: 0 2px 8px rgba(0,0,0,0.05);
+  --transition: 0.2s ease-in-out;
 }
-/*---------------- Global Styles ----------------*/
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0; padding: 0;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    margin: 2em;
-    background-color: #f2f7f9;
-    color: #333;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  min-height: 100vh;
 }
 
+/* ==============================================
+   Layout Helpers
+   ============================================== */
+.container {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+/* ==============================================
+   Typography & Headings
+   ============================================== */
 h1, h2, h3 {
-    text-align: center;
-    color: #444;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+  text-align: center;
 }
 
-/*---------------- Form Styles ----------------*/
-form {
-    max-width: 300px;
-    margin: auto;
-    padding: 15px;
-    background-color: white;
-    border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+p {
+  margin-bottom: 1rem;
 }
 
-label {
-    font-weight: bold;
-}
-
-form input[type="text"],
-form input[type="email"],
-form input[type="password"] {
-    width: 100%;
-    padding: 8px 10px;
-    margin-top: 5px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-form input[type="submit"] {
-    width: 100%;
-    padding: 10px;
-    background-color: #4CAF50;
-    color: white;
-    cursor: pointer;
-    border: none;
-    border-radius: 4px;
-    transition: background-color 0.3s ease-in-out;
-}
-
-form input[type="submit"]:hover {
-    background-color: #45a049;
-}
-
-/*---------------- Buttons ----------------*/
+/* ==============================================
+   Buttons
+   ============================================== */
 .btn {
-    display: inline-block;
-    padding: 8px 16px;
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
-    text-align: center;
-    transition: opacity 0.3s ease;
+  display: inline-block;
+  padding: 0.6em 1.2em;
+  border: none;
+  border-radius: var(--radius);
+  background-color: var(--color-primary);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition);
+}
+
+.btn:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-secondary-hover);
 }
 
 .btn-logout {
-    background-color: #f44336;
+  background-color: var(--color-error);
 }
 
 .btn-logout:hover {
-    opacity: 0.8;
+  opacity: 0.9;
 }
 
-/*---------------- Messages and Alerts ----------------*/
+/* ==============================================
+   Cards & Forms
+   ============================================== */
+.card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+}
+
+form {
+  width: 100%;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+select {
+  width: 100%;
+  padding: 0.6em;
+  margin-bottom: 1rem;
+  border: 1px solid #cbd5e0;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  transition: border-color var(--transition);
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* ==============================================
+   Messages & Alerts
+   ============================================== */
 .message {
-    margin: 1em auto;
-    padding: 1em;
-    max-width: 300px;
-    border-radius: 4px;
-    text-align: center;
-    background-color: #e9f6ff;
-    border: 1px solid #88caff;
-}
-
-.message.error {
-    background-color: #ffecec;
-    border-color: #ff5c5c;
+  max-width: 600px;
+  margin: 1rem auto;
+  padding: 1rem 1.2rem;
+  border-left: 4px solid var(--color-primary);
+  background-color: #edf2f7;
+  border-radius: var(--radius);
 }
 
 .message.success {
-    background-color: #ecffec;
-    border-color: #8bcf8b;
+  border-color: var(--color-secondary);
 }
 
-/*---------------- Dashboard Specific Styles ----------------*/
-.user-info {
-    max-width: 350px;
-    margin: 15px auto;
-    padding: 15px;
-    background: #fff;
-    border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.message.danger,
+.message.error {
+  border-color: var(--color-error);
 }
 
-.user-info ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-.user-info li {
-    padding: 5px;
-    margin-bottom: 8px;
-    border-bottom: 1px solid #efefef;
-}
-
-.user-info strong {
-    color: #4CAF50;
-}
-
-/*---------------- Links ----------------*/
+/* ==============================================
+   Navigation & Links
+   ============================================== */
 a {
-    color: #4CAF50;
-    text-decoration: none;
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition);
 }
 
 a:hover {
-    text-decoration: underline;
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+/* ==============================================
+   Habit List (Grid of Cards)
+   ============================================== */
+.habit-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.habit-card {
+  background-color: var(--color-surface);
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.habit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.habit-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.habit-meta {
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+/* ==============================================
+   Progress Input & Actions
+   ============================================== */
+.progress-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.progress-form input[type="number"] {
+  width: 3.5rem;
+  padding: 0.4em;
+  text-align: center;
+}
+
+.progress-form button {
+  padding: 0.4em 0.8em;
+}
+
+/* ==============================================
+   Edit / Delete / Details
+   ============================================== */
+.details {
+  margin-top: 0.5rem;
+}
+
+.details summary {
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--color-primary);
+}
+
+.delete-form {
+  margin-top: 0.5rem;
+  text-align: right;
+}
+.overdone {
+  color: var(--color-secondary);
+  font-weight: bold;
+  margin-left: 0.5rem;
+}
+
+/* ==============================================
+   Responsive Tweaks
+   ============================================== */
+@media (min-width: 600px) {
+  .habit-list {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
 }

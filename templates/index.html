@@ -1,112 +1,121 @@
+<!-- templates/index.html (updated; based on original) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>
-        {% if form_type == 'register' %}
-            Register
-        {% elif form_type == 'login' %}
-            Login
-        {% else %}
-            Dashboard
+        {% if form_type == 'register' %}Register
+        {% elif form_type == 'login' %}Login
+        {% else %}Dashboard
         {% endif %}
     </title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-<h1>
-    {% if form_type == 'register' %}
-        Register
-    {% elif form_type == 'login' %}
-        Login
-    {% else %}
-        Dashboard
-    {% endif %}
-</h1>
+  <div class="container">
+    <h1>
+      {% if form_type == 'register' %}Register
+      {% elif form_type == 'login' %}Login
+      {% else %}Dashboard
+      {% endif %}
+    </h1>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
         {% for category, message in messages %}
-            <div class="message {{ category }}">{{ message }}</div>
+          <div class="message {{ category }}">{{ message }}</div>
         {% endfor %}
-    {% endif %}
-{% endwith %}
+      {% endif %}
+    {% endwith %}
 
-{% if form_type == 'register' %}
-    <form method="POST" action="{{ url_for('register') }}">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
+    {% if form_type == 'register' %}
+      <div class="card">
+        <form method="POST" action="{{ url_for('register') }}">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" required>
 
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required>
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required>
 
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required>
 
-        <input type="submit" value="Register">
-    </form>
-    <p style="text-align:center;">Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+          <button type="submit" class="btn btn-secondary">Register</button>
+        </form>
+        <p style="text-align:center; margin-top:1rem;">
+          Already have an account? <a href="{{ url_for('login') }}">Login here</a>
+        </p>
+      </div>
 
-{% elif form_type == 'login' %}
-    <form method="POST" action="{{ url_for('login') }}">
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required>
+    {% elif form_type == 'login' %}
+      <div class="card">
+        <form method="POST" action="{{ url_for('login') }}">
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required>
 
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required>
 
-        <input type="submit" value="Login">
-    </form>
-    <p style="text-align:center;">Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+          <button type="submit" class="btn btn-secondary">Login</button>
+        </form>
+        <p style="text-align:center; margin-top:1rem;">
+          Don't have an account? <a href="{{ url_for('register') }}">Register here</a>
+        </p>
+      </div>
 
-{% elif form_type == 'dashboard' %}
-    <p style="text-align:center;">Welcome to your dashboard, {{ user.username }}!</p>
+    {% elif form_type == 'dashboard' %}
+      <p style="text-align:center;">Welcome to your dashboard, <strong>{{ user.username }}</strong>!</p>
+      <p style="text-align:center; margin-bottom:2rem;">
+        <a class="btn" href="{{ url_for('habits') }}">Manage Habits</a>
+      </p>
 
-    <div class="user-info">
+      <div class="user-info">
         <strong>Your Information:</strong>
         <ul>
-            <li><strong>ID:</strong> {{ user.id }}</li>
-            <li><strong>Username:</strong> {{ user.username }}</li>
-            <li><strong>Email:</strong> {{ user.email }}</li>
+          <li><strong>ID:</strong> {{ user.id }}</li>
+          <li><strong>Username:</strong> {{ user.username }}</li>
+          <li><strong>Email:</strong> {{ user.email }}</li>
         </ul>
-    </div>
+      </div>
 
-    <!-- Form to Change Username -->
-    <form method="POST" action="{{ url_for('change_username') }}">
-        <label for="new_username">New Username:</label>
-        <input type="text" id="new_username" name="new_username" required>
-        <input type="submit" value="Change Username">
-    </form>
+      <div class="cards" style="margin-top:2rem;">
+        <div class="card">
+          <form method="POST" action="{{ url_for('change_username') }}">
+            <label for="new_username">New Username:</label>
+            <input type="text" id="new_username" name="new_username" required>
+            <button type="submit" class="btn btn-secondary">Change Username</button>
+          </form>
+        </div>
+        <div class="card">
+          <form method="POST" action="{{ url_for('change_password') }}">
+            <label for="current_password">Current Password:</label>
+            <input type="password" id="current_password" name="current_password" required>
 
-    <!-- Form to Change Password -->
-    <form method="POST" action="{{ url_for('change_password') }}">
-        <label for="current_password">Current Password:</label>
-        <input type="password" id="current_password" name="current_password" required>
+            <label for="new_password">New Password:</label>
+            <input type="password" id="new_password" name="new_password" required>
 
-        <label for="new_password">New Password:</label>
-        <input type="password" id="new_password" name="new_password" required>
+            <button type="submit" class="btn btn-secondary">Change Password</button>
+          </form>
+        </div>
+      </div>
 
-        <input type="submit" value="Change Password">
-    </form>
-
-    <!-- Button for Account Deletion -->
-    <form method="POST" action="{{ url_for('delete_account') }}" onsubmit="return confirmDeletion();">
-        <input type="submit" value="Delete Account">
-    </form>
-
-    <p style="text-align:center;">
+      <form method="POST" action="{{ url_for('delete_account') }}" onsubmit="return confirmDeletion();" style="margin-top:2rem; text-align:center;">
+        <button type="submit" class="btn btn-logout">Delete Account</button>
+      </form>
+      <p style="text-align:center; margin-top:1rem;">
         <a class="btn btn-logout" href="{{ url_for('logout') }}">Log Out</a>
-    </p>
+      </p>
 
-    <script>
+      <script>
         function confirmDeletion() {
-            if (confirm("Are you really sure you want to delete your account permanently?")) {
-                return confirm("This action cannot be undone. Do you definitely want to continue?");
-            } else {
-                return false;
-            }
+          if (confirm("Are you really sure you want to delete your account permanently?")) {
+            return confirm("This action cannot be undone. Do you definitely want to continue?");
+          } else {
+            return false;
+          }
         }
-    </script>
-{% endif %}
+      </script>
+    {% endif %}
+  </div>
 </body>
 </html>
