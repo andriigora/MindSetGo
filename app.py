@@ -181,6 +181,20 @@ def habits():
     user = User.query.get(session['user_id'])
 
     if request.method == 'POST':
+        name      = request.form['name']
+        frequency = request.form['frequency']
+        goal      = int(request.form['goal'])
+
+        new_habit = Habit(
+            user_id=user.id,
+            name=name,
+            frequency=frequency,
+            goal=goal
+        )
+        db.session.add(new_habit)
+        db.session.commit()
+
+        flash(f"Habit «{name}» created!", 'success')
         return redirect(url_for('habits'))
 
     habits = Habit.query.filter_by(user_id=user.id).all()
