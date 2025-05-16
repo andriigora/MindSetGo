@@ -1,4 +1,5 @@
 /.idea
 /.venv
+/.migrations
 /instance
 config.py
