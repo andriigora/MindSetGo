@@ -75,20 +75,37 @@
               </button>
             </form>
           </div>
-
-          <!-- Progress Display -->
-          {% if habit.frequency == 'weekly' %}
-            <p class="habit-meta">
-              Since {{ week_start }}: {{ weekly_progress[habit.id] }} / {{ habit.goal }}
-              {% if weekly_progress[habit.id] > habit.goal %}
-                <span class="overdone">(+{{ weekly_progress[habit.id] - habit.goal }})</span>
-              {% endif %}
-            </p>
-          {% else %}
-            <p class="habit-meta">
-              Today: {{ progress_today.get(habit.id, 0) }} / {{ habit.goal }}
-            </p>
-          {% endif %}
+       <!-- Progress Display + Streaks -->
+       {% if habit.frequency == 'weekly' %}
+         <p class="habit-meta">
+           Since {{ week_start }}: {{ weekly_progress[habit.id] }} / {{ habit.goal }}
+           {% if weekly_progress[habit.id] > habit.goal %}
+             <span class="overdone">(+{{ weekly_progress[habit.id] - habit.goal }})</span>
+           {% endif %}
+         </p>
+         <!-- Weekly streak info -->
+         <p class="habit-meta">
+           🔥 Current streak: {{ habit.current_streak }}
+           {{ 'week' if habit.current_streak == 1 else 'weeks' }}
+         </p>
+         <p class="habit-meta">
+           🏆 Longest streak: {{ habit.longest_streak }}
+           {{ 'week' if habit.longest_streak == 1 else 'weeks' }}
+         </p>
+       {% else %}
+         <p class="habit-meta">
+           Today: {{ progress_today.get(habit.id, 0) }} / {{ habit.goal }}
+         </p>
+         <!-- Daily streak info -->
+         <p class="habit-meta">
+           🔥 Current streak: {{ habit.current_streak }}
+           {{ 'day' if habit.current_streak == 1 else 'days' }}
+         </p>
+         <p class="habit-meta">
+           🏆 Longest streak: {{ habit.longest_streak }}
+           {{ 'day' if habit.longest_streak == 1 else 'days' }}
+         </p>
+       {% endif %}
 
           <!-- Edit Habit -->
           <div class="details">

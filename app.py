@@ -150,7 +150,8 @@ class Habit(db.Model):
     goal = db.Column(db.Integer, nullable=False)
     status = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.Date, nullable=False, default=date.today)
-
+    current_streak = db.Column(db.Integer, nullable=False, default=0)
+    longest_streak = db.Column(db.Integer, nullable=False, default=0)
     progresses = db.relationship('Progress', backref='habit', cascade='all, delete-orphan')
 
     def __repr__(self):
@@ -274,6 +275,52 @@ def complete_habit(habit_id):
         db.session.add(progress)
     else:
         progress.count = count
+
+    if habit.frequency == 'daily':
+        if count >= habit.goal:
+            yesterday = today - timedelta(days=1)
+            prev = Progress.query.filter_by(habit_id=habit_id, date=yesterday).first()
+            if prev and prev.count >= habit.goal:
+                habit.current_streak += 1
+            else:
+                habit.current_streak = 1
+            if habit.current_streak > habit.longest_streak:
+                habit.longest_streak = habit.current_streak
+        else:
+            habit.current_streak = 0
+
+    elif habit.frequency == 'weekly':
+        week_start = today - timedelta(days=today.weekday())
+        week_end   = week_start + timedelta(days=6)
+
+        total_this = db.session.query(
+            db.func.coalesce(db.func.sum(Progress.count), 0)
+        ).filter(
+            Progress.habit_id==habit_id,
+            Progress.date>=week_start,
+            Progress.date<=week_end
+        ).scalar()
+
+        if total_this >= habit.goal:
+            prev_start = week_start - timedelta(days=7)
+            prev_end   = week_start - timedelta(days=1)
+            total_prev = db.session.query(
+                db.func.coalesce(db.func.sum(Progress.count), 0)
+            ).filter(
+                Progress.habit_id==habit_id,
+                Progress.date>=prev_start,
+                Progress.date<=prev_end
+            ).scalar()
+
+            if total_prev >= habit.goal:
+                habit.current_streak += 1
+            else:
+                habit.current_streak = 1
+
+            if habit.current_streak > habit.longest_streak:
+                habit.longest_streak = habit.current_streak
+        else:
+            habit.current_streak = 0
 
     db.session.commit()
     flash(f"Save: «{habit.name}» – {count} from {habit.goal}", 'success')

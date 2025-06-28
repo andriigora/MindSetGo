@@ -261,3 +261,11 @@ a:hover {
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   }
 }
+/* Streak badges */
+.habit-meta {
+  margin: 0.25rem 0;
+}
+.habit-meta span.streak {
+  font-weight: bold;
+  color: var(--color-secondary);
+}
