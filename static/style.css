@@ -269,3 +269,10 @@ a:hover {
   font-weight: bold;
   color: var(--color-secondary);
 }
+.chart-container {
+  margin-top: 1rem;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0.5rem;
+}

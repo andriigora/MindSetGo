@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from config import SETTINGS
@@ -325,6 +325,29 @@ def complete_habit(habit_id):
     db.session.commit()
     flash(f"Save: «{habit.name}» – {count} from {habit.goal}", 'success')
     return redirect(url_for('habits'))
+@app.route('/habits/<int:habit_id>/progress_data')
+def progress_data(habit_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    habit = Habit.query.filter_by(id=habit_id, user_id=session['user_id']).first_or_404()
+
+    # last 30 days
+    end = date.today()
+    start = end - timedelta(days=29)
+    # fetch daily counts
+    entries = (Progress.query
+               .filter(Progress.habit_id==habit_id,
+                       Progress.date>=start,
+                       Progress.date<=end)
+               .order_by(Progress.date)
+               .all())
+
+    # map dates → counts
+    data_map = { e.date.isoformat(): e.count for e in entries }
+    labels = [(start + timedelta(days=i)).isoformat() for i in range(30)]
+    data   = [ data_map.get(d, 0) for d in labels ]
+
+    return jsonify({ 'labels': labels, 'data': data })
 
 if __name__ == '__main__':
     db.create_all()

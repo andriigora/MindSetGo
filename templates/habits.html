@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <title>Your Habits</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="container">
@@ -96,6 +97,15 @@
          <p class="habit-meta">
            Today: {{ progress_today.get(habit.id, 0) }} / {{ habit.goal }}
          </p>
+           <div class="chart-container">
+              <canvas
+                id="progress-chart-{{ habit.id }}"
+                data-goal="{{ habit.goal }}"
+                height="200"
+              ></canvas>
+           </div>
+
+
          <!-- Daily streak info -->
          <p class="habit-meta">
            🔥 Current streak: {{ habit.current_streak }}
@@ -144,4 +154,47 @@
       {% endfor %}
     </ul>
   </div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document
+      .querySelectorAll('[id^="progress-chart-"]')
+      .forEach(canvas => {
+        const habitId = canvas.id.split('-').pop();
+        const goal    = canvas.dataset.goal;
+
+        fetch(`/habits/${habitId}/progress_data`)
+          .then(res => res.json())
+          .then(payload => {
+            new Chart(canvas.getContext('2d'), {
+              type: 'line',
+              data: {
+                labels: payload.labels,
+                datasets: [{
+                  label: 'Count',
+                  data: payload.data,
+                  fill: false,
+                  tension: 0.3
+                }]
+              },
+              options: {
+                scales: {
+                  x: { display: false },
+                  y: { beginAtZero: true }
+                },
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    callbacks: {
+                      title: items => items[0].label,
+                      label: item  => `${item.formattedValue} / ${goal}`
+                    }
+                  }
+                }
+              }
+            });
+          });
+      });
+  });
+</script>
+
 </body>
