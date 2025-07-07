@@ -200,6 +200,53 @@ def habits():
 
     habits = Habit.query.filter_by(user_id=user.id).all()
     today = date.today()
+    for h in habits:
+        if h.frequency == 'daily':
+
+            yesterday = today - timedelta(days=1)
+            prev      = Progress.query.filter_by(
+                            habit_id=h.id,
+                            date=yesterday
+                        ).first()
+
+            today_p   = Progress.query.filter_by(
+                            habit_id=h.id,
+                            date=today
+                        ).first()
+
+            if (not prev or prev.count < h.goal) and \
+               (not today_p or today_p.count < h.goal):
+                h.current_streak = 0
+
+        else:
+
+            week_start = today - timedelta(days=today.weekday())
+            prev_start = week_start - timedelta(days=7)
+            prev_end   = week_start - timedelta(days=1)
+
+
+            total_prev = db.session.query(
+                func.coalesce(func.sum(Progress.count), 0)
+            ).filter(
+                Progress.habit_id == h.id,
+                Progress.date >= prev_start,
+                Progress.date <= prev_end
+            ).scalar() or 0
+
+
+            total_curr = db.session.query(
+                func.coalesce(func.sum(Progress.count), 0)
+            ).filter(
+                Progress.habit_id == h.id,
+                Progress.date >= week_start,
+                Progress.date <= today
+            ).scalar() or 0
+
+
+            if total_prev < h.goal and total_curr < h.goal:
+                h.current_streak = 0
+
+    db.session.commit()
 
     p_today = Progress.query.filter_by(date=today).all()
     done_today = {p.habit_id for p in p_today}
@@ -207,18 +254,6 @@ def habits():
 
     week_start = today - timedelta(days=today.weekday())
     weekly_progress = {}
-    for h in habits:
-        if h.frequency == 'weekly':
-            total = db.session.query(
-                func.coalesce(func.sum(Progress.count), 0)
-            ).filter(
-                Progress.habit_id == h.id,
-                Progress.date >= week_start,
-                Progress.date <= today
-            ).scalar()
-            weekly_progress[h.id] = total or 0
-        else:
-            weekly_progress[h.id] = progress_today.get(h.id, 0)
 
     return render_template(
         'habits.html',

@@ -156,44 +156,48 @@
   </div>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    document
-      .querySelectorAll('[id^="progress-chart-"]')
-      .forEach(canvas => {
-        const habitId = canvas.id.split('-').pop();
-        const goal    = canvas.dataset.goal;
+    document.querySelectorAll('[id^="progress-chart-"]').forEach(canvas => {
+      const habitId = canvas.id.split('-').pop();
+      const goal    = canvas.dataset.goal;
 
-        fetch(`/habits/${habitId}/progress_data`)
-          .then(res => res.json())
-          .then(payload => {
-            new Chart(canvas.getContext('2d'), {
-              type: 'line',
-              data: {
-                labels: payload.labels,
-                datasets: [{
-                  label: 'Count',
-                  data: payload.data,
-                  fill: false,
-                  tension: 0.3
-                }]
+      fetch(`/habits/${habitId}/progress_data`)
+        .then(res => res.json())
+        .then(payload => {
+          new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: {
+              labels: payload.labels,
+              datasets: [{
+                label: 'Count',
+                data: payload.data,
+                fill: false,
+                tension: 0.3
+              }]
+            },
+            options: {
+              scales: {
+                x: { display: false },
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    // only show whole numbers
+                    stepSize: 1
+                  }
+                }
               },
-              options: {
-                scales: {
-                  x: { display: false },
-                  y: { beginAtZero: true }
-                },
-                plugins: {
-                  legend: { display: false },
-                  tooltip: {
-                    callbacks: {
-                      title: items => items[0].label,
-                      label: item  => `${item.formattedValue} / ${goal}`
-                    }
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    title: items => items[0].label,
+                    label: item => `${item.formattedValue} / ${goal}`
                   }
                 }
               }
-            });
+            }
           });
-      });
+        });
+    });
   });
 </script>
 
