@@ -17,6 +17,7 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)  # Username
     email = db.Column(db.String(120), unique=True, nullable=False)  # Email address
     password = db.Column(db.String(128), nullable=False)  # Hashed password
+    points = db.Column(db.Integer, nullable=False, default=0)
 
     def __repr__(self):
         return f"<User {self.username}>"
@@ -254,9 +255,23 @@ def habits():
 
     week_start = today - timedelta(days=today.weekday())
     weekly_progress = {}
+    for h in habits:
+        if h.frequency == 'weekly':
+            total = db.session.query(
+                func.coalesce(func.sum(Progress.count), 0)
+            ).filter(
+                Progress.habit_id == h.id,
+                Progress.date >= week_start,
+                Progress.date <= today
+            ).scalar()
+            weekly_progress[h.id] = total or 0
+        else:
+            # for daily habits, just mirror today’s progress
+            weekly_progress[h.id] = progress_today.get(h.id, 0)
 
     return render_template(
         'habits.html',
+        user=user,
         habits=habits,
         done_today=done_today,
         progress_today=progress_today,
@@ -293,6 +308,7 @@ def delete_habit(habit_id):
 def complete_habit(habit_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    user = User.query.get(session['user_id'])
     habit = Habit.query.get_or_404(habit_id)
     if habit.user_id != session.get('user_id'):
         flash('How did you get here?!', 'danger')
@@ -303,7 +319,21 @@ def complete_habit(habit_id):
     except ValueError:
         flash('Write number.', 'warning')
         return redirect(url_for('habits'))
+    prev = Progress.query.filter_by(habit_id=habit_id, date=today).first()
+    old_count = prev.count if prev else 0
 
+    if habit.frequency == 'weekly':
+        # total already this week (including yesterday and earlier)
+        week_start = today - timedelta(days=today.weekday())
+        total_before = (
+                db.session.query(func.coalesce(func.sum(Progress.count), 0))
+                .filter(
+                    Progress.habit_id == habit_id,
+                    Progress.date >= week_start,
+                    Progress.date <= today
+                )
+                .scalar() or 0
+        )
     progress = Progress.query.filter_by(habit_id=habit_id, date=today).first()
     if not progress:
         progress = Progress(habit_id=habit_id, date=today, count=count)
@@ -315,6 +345,9 @@ def complete_habit(habit_id):
         if count >= habit.goal:
             yesterday = today - timedelta(days=1)
             prev = Progress.query.filter_by(habit_id=habit_id, date=yesterday).first()
+            if old_count < habit.goal and count >= habit.goal:
+                pts = 1 * (10 + habit.current_streak)
+                user.points += pts
             if prev and prev.count >= habit.goal:
                 habit.current_streak += 1
             else:
@@ -327,7 +360,6 @@ def complete_habit(habit_id):
     elif habit.frequency == 'weekly':
         week_start = today - timedelta(days=today.weekday())
         week_end   = week_start + timedelta(days=6)
-
         total_this = db.session.query(
             db.func.coalesce(db.func.sum(Progress.count), 0)
         ).filter(
@@ -354,9 +386,12 @@ def complete_habit(habit_id):
 
             if habit.current_streak > habit.longest_streak:
                 habit.longest_streak = habit.current_streak
+            total_after = total_before - old_count + count
+            if total_before < habit.goal and total_after >= habit.goal:
+                pts = 1 * (10 + habit.current_streak) * 7
+                user.points += pts
         else:
             habit.current_streak = 0
-
     db.session.commit()
     flash(f"Save: «{habit.name}» – {count} from {habit.goal}", 'success')
     return redirect(url_for('habits'))
@@ -364,25 +399,53 @@ def complete_habit(habit_id):
 def progress_data(habit_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    habit = Habit.query.filter_by(id=habit_id, user_id=session['user_id']).first_or_404()
 
-    # last 30 days
-    end = date.today()
-    start = end - timedelta(days=29)
-    # fetch daily counts
-    entries = (Progress.query
-               .filter(Progress.habit_id==habit_id,
-                       Progress.date>=start,
-                       Progress.date<=end)
-               .order_by(Progress.date)
-               .all())
+    habit = Habit.query.filter_by(
+        id=habit_id,
+        user_id=session['user_id']
+    ).first_or_404()
 
-    # map dates → counts
-    data_map = { e.date.isoformat(): e.count for e in entries }
-    labels = [(start + timedelta(days=i)).isoformat() for i in range(30)]
-    data   = [ data_map.get(d, 0) for d in labels ]
+    today = date.today()
 
-    return jsonify({ 'labels': labels, 'data': data })
+    if habit.frequency == 'weekly':
+        curr_start = today - timedelta(days=today.weekday())
+        labels, data = [], []
+
+        for i in range(11, -1, -1):
+            ws = curr_start - timedelta(weeks=i)
+            we = ws + timedelta(days=6)
+            total = (
+                db.session.query(
+                    func.coalesce(func.sum(Progress.count), 0)
+                )
+                .filter(
+                    Progress.habit_id == habit_id,
+                    Progress.date >= ws,
+                    Progress.date <= we
+                )
+                .scalar() or 0
+            )
+            labels.append(ws.isoformat())
+            data.append(total)
+
+        return jsonify({'labels': labels, 'data': data})
+
+    start = today - timedelta(days=29)
+    entries = (
+        Progress.query
+        .filter(
+            Progress.habit_id == habit_id,
+            Progress.date >= start,
+            Progress.date <= today
+        )
+        .order_by(Progress.date)
+        .all()
+    )
+
+    data_map = {e.date.isoformat(): e.count for e in entries}
+    labels   = [(start + timedelta(days=i)).isoformat() for i in range(30)]
+    data     = [data_map.get(d, 0) for d in labels]
+    return jsonify({'labels': labels, 'data': data})
 
 if __name__ == '__main__':
     db.create_all()

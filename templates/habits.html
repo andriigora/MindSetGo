@@ -22,6 +22,7 @@
     {% endwith %}
 
     <h1>Your Habits</h1>
+    <p><strong>Total Points:</strong> {{ user.points }}</p>
     <p><a class="btn" href="{{ url_for('dashboard') }}">← Back to Dashboard</a></p>
 
     <!-- Add New Habit -->
@@ -97,13 +98,7 @@
          <p class="habit-meta">
            Today: {{ progress_today.get(habit.id, 0) }} / {{ habit.goal }}
          </p>
-           <div class="chart-container">
-              <canvas
-                id="progress-chart-{{ habit.id }}"
-                data-goal="{{ habit.goal }}"
-                height="200"
-              ></canvas>
-           </div>
+
 
 
          <!-- Daily streak info -->
@@ -116,6 +111,14 @@
            {{ 'day' if habit.longest_streak == 1 else 'days' }}
          </p>
        {% endif %}
+                <div class="chart-container">
+          <canvas
+            id="progress-chart-{{ habit.id }}"
+            data-goal="{{ habit.goal }}"
+            data-frequency="{{ habit.frequency }}"
+            height="200"
+          ></canvas>
+        </div>
 
           <!-- Edit Habit -->
           <div class="details">
