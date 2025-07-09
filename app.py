@@ -5,6 +5,8 @@ from config import SETTINGS
 from flask_migrate import Migrate
 from datetime import date, timedelta
 from sqlalchemy import func
+import re
+
 
 app = Flask(__name__, instance_relative_config=True)
 app.config.update(SETTINGS)
@@ -30,6 +32,26 @@ def register():
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        if password != confirm_password:
+            flash('Passwords do not match.', 'danger')
+            return render_template('index.html', form_type='register')
+        policy = [
+            (r'.{8,}', 'at least 8 characters'),
+            (r'[A-Z]', 'an uppercase letter'),
+            (r'[a-z]', 'a lowercase letter'),
+            (r'\d', 'a digit'),
+            (r'[\W_]', 'a special character')
+        ]
+        missing = [msg for regex, msg in policy if not re.search(regex, password)]
+        if missing:
+            flash(
+                'Password must contain ' +
+                ', '.join(missing[:-1]) +
+                (' and ' + missing[-1] if len(missing) > 1 else missing[0]) +
+                '.', 'danger'
+            )
+            return render_template('index.html', form_type='register')
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
         new_user = User(username=username, email=email, password=hashed_password)
 
