@@ -44,7 +44,7 @@
         <button type="submit" class="btn">Create Habit</button>
       </form>
     </div>
-
+  <div class="card manage-habits">
     <h2>Manage Habits</h2>
     <ul class="habit-list">
       {% for habit in habits %}
@@ -111,15 +111,17 @@
            {{ 'day' if habit.longest_streak == 1 else 'days' }}
          </p>
        {% endif %}
-                <div class="chart-container">
-          <canvas
-            id="progress-chart-{{ habit.id }}"
-            data-goal="{{ habit.goal }}"
-            data-frequency="{{ habit.frequency }}"
-            height="200"
-          ></canvas>
-        </div>
-
+           <details class="chart-details">
+              <summary>Expand Chart</summary>
+              <div class="chart-container">
+                <canvas
+                  id="progress-chart-{{ habit.id }}"
+                  data-goal="{{ habit.goal }}"
+                  data-frequency="{{ habit.frequency }}"
+                  height="200"
+                ></canvas>
+              </div>
+            </details>
           <!-- Edit Habit -->
           <div class="details">
             <details>
